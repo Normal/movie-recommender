@@ -1,0 +1,11 @@
+*/target
+**/target
+.idea
+**/*.iml
+*/*.iml
+*.iml
+derby.log
+metastore_db
+
+*/.DS_Store
+**/.DS_Store
