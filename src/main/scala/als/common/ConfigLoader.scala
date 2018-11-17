@@ -21,11 +21,26 @@ case class EtlParams(
                       constraints: Constraints
                     )
 
+case class TrainingParams(
+                           seed: Int,
+                           rank: Int,
+                           regParam: Double,
+                           alpha: Double,
+                           maxIter: Int,
+                           numUserBlocks: Int,
+                           numItemBlocks: Int
+                         )
+
+case class AppParams(
+                      etl: EtlParams,
+                      training: TrainingParams
+                    )
+
 object ConfigLoader {
 
   val logger: Logger = Logger[this.type]
 
-  def loadEtl(args: Array[String]): EtlParams = {
+  def loadConfig(args: Array[String]): AppParams = {
     val config: Config = createConfig(args)
     logger.info(s"App configuration: ${config.getConfig("als.etl")}")
 
@@ -36,7 +51,7 @@ object ConfigLoader {
       header = config.getBoolean("als.etl.input.header")
     )
 
-    EtlParams(
+    val etlParams = EtlParams(
       filter = config.getStringList("als.etl.filter").toList,
       data = inputData,
       constraints = Constraints(
@@ -44,6 +59,18 @@ object ConfigLoader {
         minUserRatings = config.getInt("als.etl.constraint.min_user_ratings")
       )
     )
+
+    val trainingParams = TrainingParams(
+      seed = config.getInt("als.train.alg.seed"),
+      rank = config.getInt("als.train.alg.rank"),
+      regParam = config.getDouble("als.train.alg.reg_param"),
+      alpha = config.getDouble("als.train.alg.alpha"),
+      maxIter = config.getInt("als.train.alg.max_iter"),
+      numUserBlocks = config.getInt("als.train.alg.num_user_blocks"),
+      numItemBlocks = config.getInt("als.train.alg.num_item_blocks")
+    )
+
+    AppParams(etlParams, trainingParams)
   }
 
   private def createConfig(args: Array[String]): Config = {
