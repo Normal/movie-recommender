@@ -13,7 +13,7 @@ case class InputDataParams(
                             header: Boolean
                           )
 
-case class Constraints(maxUserEvents: Int)
+case class Constraints(minMovieRatings: Int, minUserRatings: Int)
 
 case class EtlParams(
                       data: InputDataParams,
@@ -40,7 +40,8 @@ object ConfigLoader {
       filter = config.getStringList("als.etl.filter").toList,
       data = inputData,
       constraints = Constraints(
-        maxUserEvents = config.getInt("als.etl.constraint.max_user_events")
+        minMovieRatings = config.getInt("als.etl.constraint.min_movie_ratings"),
+        minUserRatings = config.getInt("als.etl.constraint.min_user_ratings")
       )
     )
   }
