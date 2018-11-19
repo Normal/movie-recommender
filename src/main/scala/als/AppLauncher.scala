@@ -1,15 +1,14 @@
 package als
 
-import als.calc.{Id, CalculationEngine}
+import als.calc.{CalculationEngine, Id, RecommendationService}
 import als.common.{AppParams, ConfigLoader}
 import als.etl.DataPipeline
 import als.preparator.ModelPreparator
 import als.train.AlsTraining
+import als.web.WebServer
 import org.apache.spark.SparkConf
 import org.apache.spark.ml.recommendation.ALSModel
 import org.apache.spark.sql.SparkSession
-
-import scala.util.Random
 
 object AppLauncher {
 
@@ -31,15 +30,9 @@ object AppLauncher {
       model, items, users, appConf.training.rank
     )
 
-    val randomUsers: Seq[Id] = Random.shuffle(users.map(_._1)).take(5)
-    val randomItems: Seq[Id] = Random.shuffle(items.map(_._1)).take(5)
+    val service = new RecommendationService(scorer, items.map(_._1), users.map(_._1))
 
-    println()
-    println()
-    randomUsers.map(scorer.recommendationsForUser(_, 10)).map(_.mkString(", ")).foreach(println)
-    randomItems.map(scorer.recommendationsForItem(_, 10)).map(_.mkString(", ")).foreach(println)
-    println()
-    println()
+    WebServer.start(service)
   }
 
 }

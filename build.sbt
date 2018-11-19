@@ -32,9 +32,31 @@ libraryDependencies ++= Seq(
 
   // common
   "com.typesafe" % "config" % versions.config,
-  "org.clapper" %% "grizzled-slf4j" % versions.slf4j
+  "org.clapper" %% "grizzled-slf4j" % versions.slf4j,
 
   // web layer
-  //  "com.typesafe.akka" %% "akka-http" % versions.akkaHttp,
-  //  "com.typesafe.akka" %% "akka-http-spray-json" % versions.akkaHttp
+  "com.typesafe.akka" %% "akka-http" % versions.akkaHttp,
+  "com.typesafe.akka" %% "akka-http-spray-json" % versions.akkaHttp,
+  "com.typesafe.akka" %% "akka-stream" % versions.akka
 )
+
+
+assemblyJarName in assembly := s"${name.value}.jar"
+assemblyMergeStrategy in assembly := {
+  case PathList("META-INF", xs@_*) => MergeStrategy.discard
+  case PathList("google", "protobuf", xs@_*) => MergeStrategy.first
+  case "application.conf" => MergeStrategy.concat
+  case "log4j.properties" => MergeStrategy.concat
+  case x =>
+    val baseStrategy = (assemblyMergeStrategy in assembly).value
+    baseStrategy(x)
+}
+test in assembly := {}
+
+
+//mergeStrategy in assembly := {
+//  case m if m.toLowerCase.endsWith("manifest.mf") => MergeStrategy.discard
+//  case m if m.toLowerCase.matches("meta-inf.*\\.sf$") => MergeStrategy.discard
+//  case "reference.conf" => MergeStrategy.concat
+//  case _ => MergeStrategy.first
+//}
