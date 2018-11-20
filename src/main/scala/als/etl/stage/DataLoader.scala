@@ -36,7 +36,7 @@ class DataLoader(header: Boolean, delimiter: String)(implicit spark: SparkSessio
     logger.info(s"Load df for source file $path")
 
     spark.read.format("csv")
-      .options(Map("header" -> header.toString, "delimiter" -> delimiter, "quote" -> "\u0000"))
+      .options(Map("header" -> header.toString, "delimiter" -> delimiter, "quote" -> "\""))
       .schema(scheme)
       .load(path)
   }

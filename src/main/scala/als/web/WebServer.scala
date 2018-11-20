@@ -1,12 +1,11 @@
 package als.web
 
-import java.time.{LocalDateTime, ZoneId}
-
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
-import als.calc.{ItemScore, RecommendationService}
+import als.calc.{Id, ItemScore, RecommendationService}
 import grizzled.slf4j.Logger
 import spray.json.DefaultJsonProtocol._
 import spray.json.RootJsonFormat
@@ -14,43 +13,48 @@ import spray.json.RootJsonFormat
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 
 
 case class PredictionResponse(
-                               id: Int,
-                               scores: Seq[ItemScore]
-                             )
+                               id: Id,
+                               scores: Seq[ScoreInfo],
+                               movie: Option[String] = None
+)
+
+case class ScoreInfo(id: Id, title: String, score: Float)
 
 object WebServer {
 
   private val logger: Logger = Logger[this.type]
 
-  def start(service: RecommendationService): Unit = {
+  def start(service: RecommendationService, movies: Map[Int, String]): Unit = {
 
 
     implicit val system: ActorSystem = ActorSystem("als-web")
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
     //    implicit val queryFormat: RootJsonFormat[Query] = jsonFormat4(Query)
-    implicit val scoreFormat: RootJsonFormat[ItemScore] = jsonFormat2(ItemScore)
-    implicit val resultFormat: RootJsonFormat[PredictionResponse] = jsonFormat2(PredictionResponse)
+    implicit val scoreFormat: RootJsonFormat[ScoreInfo] = jsonFormat3(ScoreInfo)
+    implicit val resultFormat: RootJsonFormat[PredictionResponse] = jsonFormat3(PredictionResponse)
+
+    def scoresToData(scores: Seq[ItemScore]): Seq[ScoreInfo] =
+      scores.map(i => ScoreInfo(i.item, movies(i.item), i.score))
 
     val route = {
       get {
         pathPrefix("user" / "random") {
           val (id, scores) = service.forRandomUser
-          val results: PredictionResponse = PredictionResponse(id, scores)
+          val results: PredictionResponse = PredictionResponse(id, scoresToData(scores))
           complete(results)
         }
       } ~
-      get {
-        pathPrefix("item" / "random") {
-          val (id, scores) = service.forRandomItem
-          val results: PredictionResponse = PredictionResponse(id, scores)
-          complete(results)
+        get {
+          pathPrefix("item" / "random") {
+            val (id, scores) = service.forRandomItem
+            val results: PredictionResponse = PredictionResponse(id, scoresToData(scores), Some(movies(id)))
+            complete(results)
+          }
         }
-      }
     }
 
 

@@ -13,7 +13,8 @@ object DataPipeline {
   type Users = Seq[(Id, Index)]
   type Movies = Seq[(Id, Index)]
 
-  def run(params: EtlParams)(implicit spark: SparkSession): (DataFrame, Users, Movies) = {
+  def run(params: EtlParams)(implicit spark: SparkSession):
+  (DataFrame, Users, Movies, Map[Int, String]) = {
 
     val loader = new DataLoader(params.data.header, params.data.delimiter)
     val constrains = new ConstraintsApplier(params.constraints)
@@ -28,6 +29,9 @@ object DataPipeline {
     val usersDistinct = filtered.select("user_id").distinct().collect().map(_.getInt(0))
     val itemsDistinct = filtered.select("movie_id").distinct().collect().map(_.getInt(0))
 
-    (filtered, usersDistinct.zipWithIndex, itemsDistinct.zipWithIndex)
+    val moviesData = filtered.select("movie_id", "title").distinct()
+      .collect().map(row => row.getInt(0) -> row.getString(1)).toMap
+
+    (filtered, usersDistinct.zipWithIndex, itemsDistinct.zipWithIndex, moviesData)
   }
 }

@@ -1,6 +1,6 @@
 package als
 
-import als.calc.{CalculationEngine, Id, RecommendationService}
+import als.calc.{CalculationEngine, RecommendationService}
 import als.common.{AppParams, ConfigLoader}
 import als.etl.DataPipeline
 import als.preparator.ModelPreparator
@@ -21,7 +21,7 @@ object AppLauncher {
 
     implicit val spark: SparkSession = SparkSession.builder().config(sparkConf).getOrCreate()
 
-    val (df, users, items) = DataPipeline.run(appConf.etl)
+    val (df, users, items, moviesData) = DataPipeline.run(appConf.etl)
 
     val alg = new AlsTraining(appConf.training)
     val model: ALSModel = alg.trainModel(df)
@@ -32,7 +32,7 @@ object AppLauncher {
 
     val service = new RecommendationService(scorer, items.map(_._1), users.map(_._1))
 
-    WebServer.start(service)
+    WebServer.start(service, moviesData)
   }
 
 }

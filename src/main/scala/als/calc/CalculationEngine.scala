@@ -2,6 +2,7 @@ package als.calc
 
 import breeze.linalg.{DenseMatrix, DenseVector, argtopk}
 
+
 case class ItemScore(item: Id, score: Float)
 
 
