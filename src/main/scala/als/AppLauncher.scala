@@ -21,7 +21,7 @@ object AppLauncher {
 
     implicit val spark: SparkSession = SparkSession.builder().config(sparkConf).getOrCreate()
 
-    val (df, users, items, moviesData) = DataPipeline.run(appConf.etl)
+    val (df, users, items, moviesData, userHistory) = DataPipeline.run(appConf.etl)
 
     val alg = new AlsTraining(appConf.training)
     val model: ALSModel = alg.trainModel(df)
@@ -30,7 +30,7 @@ object AppLauncher {
       model, items, users, appConf.training.rank
     )
 
-    val service = new RecommendationService(scorer, items.map(_._1), users.map(_._1))
+    val service = new RecommendationService(scorer, items.map(_._1), users.map(_._1), userHistory)
 
     WebServer.start(service, moviesData)
   }

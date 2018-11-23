@@ -2,7 +2,12 @@ package als.calc
 
 import scala.util.Random
 
-class RecommendationService(scorer: CalculationEngine, items: Seq[Id], users: Seq[Id]) {
+class RecommendationService(
+                             scorer: CalculationEngine,
+                             items: Seq[Id],
+                             users: Seq[Id],
+                             userHistory: Map[Id, List[String]]
+                           ) {
 
   val rand = new Random()
 
@@ -19,4 +24,6 @@ class RecommendationService(scorer: CalculationEngine, items: Seq[Id], users: Se
 
     (randomItem, scorer.recommendationsForItem(randomItem, 10))
   }
+
+  def getUserHistory(userId: Id): List[String] = userHistory.getOrElse(userId, List.empty)
 }

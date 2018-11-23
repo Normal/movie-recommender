@@ -5,6 +5,8 @@ import als.common.EtlParams
 import als.etl.stage.{ConstraintsApplier, DataLoader}
 import grizzled.slf4j.Logger
 import org.apache.spark.sql.{DataFrame, SparkSession}
+import scala.collection.JavaConversions._
+
 
 object DataPipeline {
 
@@ -14,7 +16,7 @@ object DataPipeline {
   type Movies = Seq[(Id, Index)]
 
   def run(params: EtlParams)(implicit spark: SparkSession):
-  (DataFrame, Users, Movies, Map[Int, String]) = {
+  (DataFrame, Users, Movies, Map[Int, String], Map[Id, List[String]]) = {
 
     val loader = new DataLoader(params.data.header, params.data.delimiter)
     val constrains = new ConstraintsApplier(params.constraints)
@@ -32,6 +34,12 @@ object DataPipeline {
     val moviesData = filtered.select("movie_id", "title").distinct()
       .collect().map(row => row.getInt(0) -> row.getString(1)).toMap
 
-    (filtered, usersDistinct.zipWithIndex, itemsDistinct.zipWithIndex, moviesData)
+    import org.apache.spark.sql.functions._
+    val userHistory: Map[Id, List[String]] = filtered.select("user_id", "title")
+      .groupBy("user_id")
+      .agg(collect_set("title").as("titles"))
+      .collect().map(r => r.getInt(0) -> r.getList[String](1).toList).toMap
+
+    (filtered, usersDistinct.zipWithIndex, itemsDistinct.zipWithIndex, moviesData, userHistory)
   }
 }

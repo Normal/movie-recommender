@@ -27,9 +27,6 @@ libraryDependencies ++= Seq(
   "org.scalanlp" %% "breeze" % versions.breeze,
   "org.scalanlp" %% "breeze-natives" % versions.breeze,
 
-  // spark hbase connector
-  "com.hortonworks" % "shc-core" % versions.shc,
-
   // common
   "com.typesafe" % "config" % versions.config,
   "org.clapper" %% "grizzled-slf4j" % versions.slf4j,
@@ -42,21 +39,11 @@ libraryDependencies ++= Seq(
 
 
 assemblyJarName in assembly := s"${name.value}.jar"
+
+
 assemblyMergeStrategy in assembly := {
-  case PathList("META-INF", xs@_*) => MergeStrategy.discard
-  case PathList("google", "protobuf", xs@_*) => MergeStrategy.first
-  case "application.conf" => MergeStrategy.concat
-  case "log4j.properties" => MergeStrategy.concat
-  case x =>
-    val baseStrategy = (assemblyMergeStrategy in assembly).value
-    baseStrategy(x)
+  case m if m.toLowerCase.endsWith("manifest.mf") => MergeStrategy.discard
+  case m if m.toLowerCase.matches("meta-inf.*\\.sf$") => MergeStrategy.discard
+  case "reference.conf" => MergeStrategy.concat
+  case _ => MergeStrategy.first
 }
-test in assembly := {}
-
-
-//mergeStrategy in assembly := {
-//  case m if m.toLowerCase.endsWith("manifest.mf") => MergeStrategy.discard
-//  case m if m.toLowerCase.matches("meta-inf.*\\.sf$") => MergeStrategy.discard
-//  case "reference.conf" => MergeStrategy.concat
-//  case _ => MergeStrategy.first
-//}

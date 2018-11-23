@@ -18,8 +18,9 @@ import scala.concurrent.duration._
 case class PredictionResponse(
                                id: Id,
                                scores: Seq[ScoreInfo],
-                               movie: Option[String] = None
-)
+                               movie: Option[String] = None,
+                               history: Seq[String] = Seq.empty
+                             )
 
 case class ScoreInfo(id: Id, title: String, score: Float)
 
@@ -35,7 +36,7 @@ object WebServer {
 
     //    implicit val queryFormat: RootJsonFormat[Query] = jsonFormat4(Query)
     implicit val scoreFormat: RootJsonFormat[ScoreInfo] = jsonFormat3(ScoreInfo)
-    implicit val resultFormat: RootJsonFormat[PredictionResponse] = jsonFormat3(PredictionResponse)
+    implicit val resultFormat: RootJsonFormat[PredictionResponse] = jsonFormat4(PredictionResponse)
 
     def scoresToData(scores: Seq[ItemScore]): Seq[ScoreInfo] =
       scores.map(i => ScoreInfo(i.item, movies(i.item), i.score))
@@ -44,14 +45,15 @@ object WebServer {
       get {
         pathPrefix("user" / "random") {
           val (id, scores) = service.forRandomUser
-          val results: PredictionResponse = PredictionResponse(id, scoresToData(scores))
+          val userHistory = service.getUserHistory(id)
+          val results: PredictionResponse = PredictionResponse(id, scoresToData(scores), history = userHistory)
           complete(results)
         }
       } ~
         get {
           pathPrefix("item" / "random") {
             val (id, scores) = service.forRandomItem
-            val results: PredictionResponse = PredictionResponse(id, scoresToData(scores), Some(movies(id)))
+            val results: PredictionResponse = PredictionResponse(id, scoresToData(scores), movie = Some(movies(id)))
             complete(results)
           }
         }
