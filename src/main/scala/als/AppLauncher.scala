@@ -1,11 +1,7 @@
 package als
 
 import als.calc.{CalculationEngine, RecommendationService}
-import als.common.{AppParams, ConfigLoader}
 import als.etl.DataPipeline
-import als.preparator.ModelPreparator
-import als.train.AlsTraining
-import als.web.WebServer
 import org.apache.spark.SparkConf
 import org.apache.spark.ml.recommendation.ALSModel
 import org.apache.spark.sql.SparkSession

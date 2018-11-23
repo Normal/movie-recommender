@@ -17,10 +17,11 @@ class CalculationEngine(
                   user2Index: Map[Id, Index]
                 ) {
 
-  def recommendationsForUser(userId: Id, num: Int): Seq[ItemScore] = {
+  def recommendationsForUser(userId: Id, num: Int, history: List[Int]): Seq[ItemScore] = {
     val userVector = getVector(user2Index(userId), userMatrix)
-    val scores = topK(userVector, num)
-    scores
+    val scores = topK(userVector, num + history.size)
+    // remove items which user has already seen
+    scores.filter(id => !history.contains(id.item)).take(num)
   }
 
   def recommendationsForItem(itemId: Id, num: Int): Seq[ItemScore] = {

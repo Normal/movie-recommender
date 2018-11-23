@@ -1,7 +1,7 @@
 package als.etl
 
 import als.calc.{Id, Index}
-import als.common.EtlParams
+import als.EtlParams
 import als.etl.stage.{ConstraintsApplier, DataLoader}
 import grizzled.slf4j.Logger
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -16,7 +16,7 @@ object DataPipeline {
   type Movies = Seq[(Id, Index)]
 
   def run(params: EtlParams)(implicit spark: SparkSession):
-  (DataFrame, Users, Movies, Map[Int, String], Map[Id, List[String]]) = {
+  (DataFrame, Users, Movies, Map[Int, String], Map[Id, (List[String], List[Int])]) = {
 
     val loader = new DataLoader(params.data.header, params.data.delimiter)
     val constrains = new ConstraintsApplier(params.constraints)
@@ -35,10 +35,10 @@ object DataPipeline {
       .collect().map(row => row.getInt(0) -> row.getString(1)).toMap
 
     import org.apache.spark.sql.functions._
-    val userHistory: Map[Id, List[String]] = filtered.select("user_id", "title")
+    val userHistory: Map[Id, (List[String], List[Int])] = filtered.select("user_id", "title", "movie_id")
       .groupBy("user_id")
-      .agg(collect_set("title").as("titles"))
-      .collect().map(r => r.getInt(0) -> r.getList[String](1).toList).toMap
+      .agg(collect_set("title").as("titles"), collect_set("movie_id").as("ids"))
+      .collect().map(r => r.getInt(0) -> (r.getList[String](1).toList, r.getList[Int](2).toList)).toMap
 
     (filtered, usersDistinct.zipWithIndex, itemsDistinct.zipWithIndex, moviesData, userHistory)
   }

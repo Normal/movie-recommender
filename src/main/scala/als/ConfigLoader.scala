@@ -1,4 +1,4 @@
-package als.common
+package als
 
 import java.io.File
 

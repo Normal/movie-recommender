@@ -20,7 +20,7 @@ val providedScope = Seq(
   "org.apache.spark" %% "spark-mllib" % versions.spark
 )
 
-libraryDependencies ++= providedScope //.map(_ % "provided")
+libraryDependencies ++= providedScope.map(_ % "provided")
 libraryDependencies ++= Seq(
 
   // breeze for fast calculation

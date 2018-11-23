@@ -6,7 +6,7 @@ class RecommendationService(
                              scorer: CalculationEngine,
                              items: Seq[Id],
                              users: Seq[Id],
-                             userHistory: Map[Id, List[String]]
+                             userHistory: Map[Id, (List[String], List[Int])]
                            ) {
 
   val rand = new Random()
@@ -15,7 +15,8 @@ class RecommendationService(
     val randomIndex = rand.nextInt(users.length)
     val randomUser = users(randomIndex)
 
-    (randomUser, scorer.recommendationsForUser(randomUser, 10))
+    val userHistoryIds = userHistory.get(randomUser).map(_._2).getOrElse(List.empty)
+    (randomUser, scorer.recommendationsForUser(randomUser, 10, userHistoryIds))
   }
 
   def forRandomItem: (Id, Seq[ItemScore]) = {
@@ -25,5 +26,6 @@ class RecommendationService(
     (randomItem, scorer.recommendationsForItem(randomItem, 10))
   }
 
-  def getUserHistory(userId: Id): List[String] = userHistory.getOrElse(userId, List.empty)
+  def getUserHistory(userId: Id): List[String] =
+    userHistory.get(userId).map(_._1).getOrElse(List.empty)
 }

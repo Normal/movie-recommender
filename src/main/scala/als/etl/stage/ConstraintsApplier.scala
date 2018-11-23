@@ -1,6 +1,6 @@
 package als.etl.stage
 
-import als.common.Constraints
+import als.Constraints
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 

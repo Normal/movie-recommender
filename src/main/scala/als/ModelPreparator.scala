@@ -1,6 +1,6 @@
-package als.preparator
+package als
 
-import als.calc.{Id, Index, CalculationEngine}
+import als.calc.{CalculationEngine, Id, Index}
 import org.apache.spark.ml.recommendation.ALSModel
 
 object ModelPreparator {

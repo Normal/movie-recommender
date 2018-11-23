@@ -1,4 +1,4 @@
-package als.web
+package als
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http

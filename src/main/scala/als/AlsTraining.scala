@@ -1,6 +1,5 @@
-package als.train
+package als
 
-import als.common.TrainingParams
 import grizzled.slf4j.Logger
 import org.apache.spark.ml.recommendation.{ALS, ALSModel}
 import org.apache.spark.sql.DataFrame
