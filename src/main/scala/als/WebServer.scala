@@ -41,22 +41,39 @@ object WebServer {
     def scoresToData(scores: Seq[ItemScore]): Seq[ScoreInfo] =
       scores.map(i => ScoreInfo(i.item, movies(i.item), i.score))
 
+    def getRecsForUser(id: Id, scores: Seq[ItemScore]) = {
+      val userHistory = service.getUserHistory(id)
+      val results: PredictionResponse = PredictionResponse(id, scoresToData(scores), history = userHistory)
+      complete(results)
+    }
+
     val route = {
       get {
         pathPrefix("user" / "random") {
           val (id, scores) = service.forRandomUser
-          val userHistory = service.getUserHistory(id)
-          val results: PredictionResponse = PredictionResponse(id, scoresToData(scores), history = userHistory)
+          getRecsForUser(id, scores)
+        }
+      } ~
+      get {
+        path("user" / IntNumber) { id =>
+          val scores = service.forUser(id)
+          getRecsForUser(id, scores)
+        }
+      } ~
+      get {
+        pathPrefix("item" / "random") {
+          val (id, scores) = service.forRandomItem
+          val results: PredictionResponse = PredictionResponse(id, scoresToData(scores), movie = Some(movies(id)))
           complete(results)
         }
       } ~
-        get {
-          pathPrefix("item" / "random") {
-            val (id, scores) = service.forRandomItem
-            val results: PredictionResponse = PredictionResponse(id, scoresToData(scores), movie = Some(movies(id)))
-            complete(results)
-          }
+      get {
+        path("item" / IntNumber) { id =>
+          val scores = service.forItem(id)
+          val results: PredictionResponse = PredictionResponse(id, scoresToData(scores), movie = Some(movies(id)))
+          complete(results)
         }
+      }
     }
 
 
