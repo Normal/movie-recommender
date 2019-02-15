@@ -9,3 +9,7 @@ metastore_db
 
 */.DS_Store
 **/.DS_Store
+
+
+/data/ml-latest
+
