@@ -1,0 +1,161 @@
+
+# coding: utf-8
+
+# In[1]:
+
+
+import sys
+get_ipython().system('{sys.executable} -m pip install google_images_download pytesseract opencv-python')
+
+
+# In[56]:
+
+
+from contextlib import contextmanager
+import sys, os
+
+@contextmanager
+def suppress_stdout():
+    with open(os.devnull, "w") as devnull:
+        old_stdout = sys.stdout
+        sys.stdout = devnull
+        try:  
+            yield
+        finally:
+            sys.stdout = old_stdout
+            
+            
+from google_images_download import google_images_download
+response = google_images_download.googleimagesdownload()
+
+def get_image(kw): 
+    arguments = {"keywords": kw, "limit": 1, "format": "jpg", "size": ">2MP"}
+    absolute_image_paths = response.download(arguments)
+    return absolute_image_paths
+
+import cv2 as cv
+from matplotlib import pyplot as plt
+import pytesseract
+
+def grid_display(list_of_images, list_of_titles=[], no_of_columns=4, figsize=(20,3)):
+
+    fig = plt.figure(figsize=figsize)
+    column = 0
+    for i in range(len(list_of_images)):
+        column += 1
+        #  check for end of column and create a new figure
+        if column == no_of_columns+1:
+            fig = plt.figure(figsize=figsize)
+            column = 1
+        fig.add_subplot(1, no_of_columns, column)
+        
+        
+        
+        img = cv.imread(list_of_images[i])
+        rgb_img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+        
+        plt.imshow(rgb_img)
+        plt.axis('off')
+        if len(list_of_titles) >= len(list_of_images):
+            plt.title(list_of_titles[i])
+            
+from IPython.display import Markdown, display
+def printmd(string):
+    display(Markdown(string))            
+            
+import requests, json
+
+def user_reccom(user_id):
+    url = 'http://docker.for.mac.localhost:8080/user/{}'.format(user_id)
+    r = requests.get(url)
+    data = json.loads(r.content.decode())
+
+    printmd('**Response:**')
+    print(json.dumps(data, indent=4, sort_keys=True))
+    return data
+
+def random_user_reccom():
+    url = 'http://docker.for.mac.localhost:8080/user/random'
+    r = requests.get(url)
+    data = json.loads(r.content.decode())
+
+#     printmd('**Response:**')
+#     print(json.dumps(data, indent=4, sort_keys=True))
+    return data
+    
+def display_user_history(data):
+    history_titles = [x.get("title") for x in data.get("history")][:16]
+    with suppress_stdout():
+        history_image_links = list(map(lambda x: next(iter(next(iter(get_image("movie - {}".format(x)).values())))), history_titles))
+  
+    printmd('**User {} history (top 16):**'.format(data.get("id")))
+    grid_display(history_image_links, history_titles) 
+    
+def display_user_reccom(data):
+    titles = list(map(lambda x: "{} - {}".format(x.get("title")[:25], str(x.get("score"))[:4]), data.get("scores")[:16]))
+    with suppress_stdout():
+        image_links = list(map(lambda x: next(iter(next(iter(get_image("movie - {}".format(x.get("title"))).values())))), data.get("scores")[:16]))
+    
+    printmd('**Recommendations for user {}:**'.format(data.get("id")))
+    grid_display(image_links, titles) 
+
+
+from IPython.core.display import Image, display
+def item_reccom(item_id):
+    url = 'http://docker.for.mac.localhost:8080/item/{}'.format(item_id)
+    r = requests.get(url)
+    data = json.loads(r.content.decode())
+
+    printmd('**Response:**')
+    print(json.dumps(data, indent=4, sort_keys=True))
+
+    titles = list(map(lambda x: "{} - {}".format(x.get("title")[:25], str(x.get("score"))[:4]), data.get("scores")[:8]))
+    with suppress_stdout():
+        image_links = list(map(lambda x: next(iter(next(iter(get_image(x.get("title")).values())))), data.get("scores")[:8]))
+        item_url = next(iter(next(iter(get_image(data.get("movie")).values()))))
+        display(Image(item_url, width=100, unconfined=True))
+    
+    printmd('**Recommendations for {}:**'.format(data.get("movie")))
+    grid_display(image_links, titles) 
+def random_item_reccom():
+    url = 'http://docker.for.mac.localhost:8080/item/random'
+    r = requests.get(url)
+    data = json.loads(r.content.decode())
+
+    printmd('**Response:**')
+    print(json.dumps(data, indent=4, sort_keys=True))
+
+    titles = list(map(lambda x: "{} - {}".format(x.get("title")[:25], str(x.get("score"))[:4]), data.get("scores")[:8]))
+    with suppress_stdout():
+        image_links = list(map(lambda x: next(iter(next(iter(get_image(x.get("title")).values())))), data.get("scores")[:8]))
+        item_url = next(iter(next(iter(get_image(data.get("movie")).values()))))
+        display(Image(item_url, width=100, unconfined=True))
+    
+    printmd('**Recommendations for {}:**'.format(data.get("movie")))
+    grid_display(image_links, titles) 
+
+
+# In[61]:
+
+
+user_data = random_user_reccom()
+display_user_history(user_data)
+
+
+# In[62]:
+
+
+display_user_reccom(user_data)
+
+
+# In[6]:
+
+
+item_reccom(99112)
+
+
+# In[7]:
+
+
+random_item_reccom()
+

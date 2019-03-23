@@ -1,6 +1,6 @@
 package als
 
-import als.calc.{CalculationEngine, Id, Index}
+import als.calc.{Scorer, Id, Index}
 import org.apache.spark.ml.recommendation.ALSModel
 
 object ModelPreparator {
@@ -10,7 +10,7 @@ object ModelPreparator {
                items: Seq[(Id, Index)],
                users: Seq[(Id, Index)],
                rank: Int
-             ): CalculationEngine = {
+             ): Scorer = {
 
     val userFactors = model.userFactors.rdd
       .map(r => (r.getInt(0), r.getSeq[Float](1)))
@@ -20,7 +20,7 @@ object ModelPreparator {
       .map(r => (r.getInt(0), r.getSeq[Float](1)))
       .collect()
 
-    CalculationEngine(
+    Scorer(
       rank = rank,
       itemFactors = itemFactors,
       itemMapping = items,

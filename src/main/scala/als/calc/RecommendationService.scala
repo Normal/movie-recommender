@@ -1,23 +1,25 @@
 package als.calc
 
+import als.MovieRating
+
 import scala.util.Random
 
 class RecommendationService(
-                             scorer: CalculationEngine,
+                             scorer: Scorer,
                              items: Seq[Id],
                              users: Seq[Id],
-                             userHistory: Map[Id, (List[String], List[Int])]
+                             userHistory: Map[Id, Seq[MovieRating]]
                            ) {
 
   val rand = new Random()
 
   def forUser(userId: Id): Seq[ItemScore] = {
-    val userHistoryIds = userHistory.get(userId).map(_._2).getOrElse(List.empty)
-    scorer.recommendationsForUser(userId, 10, userHistoryIds)
+    val userHistoryIds: Seq[Int] = userHistory.getOrElse(userId, List.empty).map(_.movieId)
+    scorer.recommendationsForUser(userId, 20, userHistoryIds)
   }
 
   def forItem(itemId: Id): Seq[ItemScore] =
-    scorer.recommendationsForItem(itemId, 10)
+    scorer.recommendationsForItem(itemId, 20)
 
   def forRandomUser: (Id, Seq[ItemScore]) = {
     val randomIndex = rand.nextInt(users.length)
@@ -33,6 +35,6 @@ class RecommendationService(
     (randomItem, forItem(randomItem))
   }
 
-  def getUserHistory(userId: Id): List[String] =
-    userHistory.get(userId).map(_._1).getOrElse(List.empty)
+  def getUserHistory(userId: Id): Seq[MovieRating] =
+    userHistory.getOrElse(userId, List.empty)
 }

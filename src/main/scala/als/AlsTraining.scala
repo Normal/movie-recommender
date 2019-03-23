@@ -15,7 +15,7 @@ class AlsTraining(params: TrainingParams) {
       setItemCol("movie_id").
       setRatingCol("rating").
       setPredictionCol("score").
-      setImplicitPrefs(true).
+      setImplicitPrefs(false).
       setSeed(params.seed).
       setRank(params.rank).
       setRegParam(params.regParam).

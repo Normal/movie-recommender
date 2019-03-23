@@ -19,8 +19,10 @@ case class PredictionResponse(
                                id: Id,
                                scores: Seq[ScoreInfo],
                                movie: Option[String] = None,
-                               history: Seq[String] = Seq.empty
+                               history: Seq[MovieRating] = Seq.empty
                              )
+
+case class MovieRating(title: String, movieId: Int, rating: Float)
 
 case class ScoreInfo(id: Id, title: String, score: Float)
 
@@ -36,13 +38,14 @@ object WebServer {
 
     //    implicit val queryFormat: RootJsonFormat[Query] = jsonFormat4(Query)
     implicit val scoreFormat: RootJsonFormat[ScoreInfo] = jsonFormat3(ScoreInfo)
+    implicit val movieRatingFormat: RootJsonFormat[MovieRating] = jsonFormat3(MovieRating)
     implicit val resultFormat: RootJsonFormat[PredictionResponse] = jsonFormat4(PredictionResponse)
 
     def scoresToData(scores: Seq[ItemScore]): Seq[ScoreInfo] =
       scores.map(i => ScoreInfo(i.item, movies(i.item), i.score))
 
     def getRecsForUser(id: Id, scores: Seq[ItemScore]) = {
-      val userHistory = service.getUserHistory(id)
+      val userHistory = service.getUserHistory(id).filter(_.rating >= 4.5)
       val results: PredictionResponse = PredictionResponse(id, scoresToData(scores), history = userHistory)
       complete(results)
     }

@@ -8,7 +8,7 @@ case class ItemScore(item: Id, score: Float)
 
 // Important! All user related information can be moved into some key/value store instead.
 @SerialVersionUID(1L)
-class CalculationEngine(
+class Scorer(
                   itemMatrix: DenseMatrix[Float],
                   index2Item: Map[Index, Id],
                   item2Index: Map[Id, Index],
@@ -17,7 +17,7 @@ class CalculationEngine(
                   user2Index: Map[Id, Index]
                 ) {
 
-  def recommendationsForUser(userId: Id, num: Int, history: List[Int]): Seq[ItemScore] = {
+  def recommendationsForUser(userId: Id, num: Int, history: Seq[Int]): Seq[ItemScore] = {
     val userVector = getVector(user2Index(userId), userMatrix)
     val scores = topK(userVector, num + history.size)
     // remove items which user has already seen
@@ -47,7 +47,7 @@ class CalculationEngine(
 }
 
 
-object CalculationEngine {
+object Scorer {
 
   def apply(
              rank: Int,
@@ -55,7 +55,7 @@ object CalculationEngine {
              itemMapping: TraversableOnce[(Id, Index)],
              userFactors: TraversableOnce[(Id, Seq[Float])],
              userMapping: TraversableOnce[(Id, Index)]
-           ): CalculationEngine = {
+           ): Scorer = {
 
     val index2Item = itemMapping.map(x => (x._2, x._1)).toMap
     val item2Index = itemMapping.map(x => (x._1, x._2)).toMap
@@ -65,7 +65,7 @@ object CalculationEngine {
     val user2Index = userMapping.map(x => (x._1, x._2)).toMap
     val userMatrix = buildMatrix(rank, index2User.keys.max, userFactors, user2Index)
 
-    new CalculationEngine(itemMatrix, index2Item, item2Index, userMatrix, index2User, user2Index)
+    new Scorer(itemMatrix, index2Item, item2Index, userMatrix, index2User, user2Index)
   }
 
   private[als] def buildMatrix(

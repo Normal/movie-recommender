@@ -1,6 +1,6 @@
 package als
 
-import als.calc.{CalculationEngine, RecommendationService}
+import als.calc.{Scorer, RecommendationService}
 import als.etl.DataPipeline
 import org.apache.spark.SparkConf
 import org.apache.spark.ml.recommendation.ALSModel
@@ -22,7 +22,7 @@ object AppLauncher {
     val alg = new AlsTraining(appConf.training)
     val model: ALSModel = alg.trainModel(df)
 
-    val scorer: CalculationEngine = ModelPreparator.prepare(
+    val scorer: Scorer = ModelPreparator.prepare(
       model, items, users, appConf.training.rank
     )
 
